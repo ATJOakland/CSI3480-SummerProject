@@ -14,10 +14,11 @@ But it's a big file (100MB) and GitHub only allows 25MB upload so a lot had to b
 """
 
 import time
+import customtkinter as ctk
 
 # Constants
-COMMON_PASSWORD_LIST = "../list-of-most-common-passwords/rockyou.txt"
-TARGET_PASSWORD = "../secret_user_info/secret_password.txt"
+COMMON_PASSWORD_LIST = "./secret_user_info/secret_password.txt" #Changed from rockyou file path to secret_password path
+TARGET_PASSWORD = "./secret_user_info/secret_password.txt"
 
 def read_passwords_from_file(filename: str) -> list[str]:
     # Read all the words in the text file and adds it to the array for testing.
@@ -51,17 +52,56 @@ def get_target(filename: str) -> str:
         return ""
     except Exception as e:
         print(f"An error occured: {e}")
-        return ""
+        return ""    
 
-def main() -> None:
+def user_Interface():
+    root = ctk.CTk() #Initializes the User Interface window
+    root.title("Brute Force Attack") #Sets title of window
+    root.geometry("400x400") #Sets size of the window
+    frame = ctk.CTkFrame(master=root, width=500, height=500) #Sets a frame in the window to utalize a grid for label & button placement
+    frame.place(relx=.5, rely=.5, anchor="center", bordermode = 'outside') #places the frame in the center of the window
+
+    #Creates a button called "Start Attack" and places it on the grid in the first row/column
+    startAttackButton = ctk.CTkButton(frame, text="Start Attack", font=("Arial", 24), text_color="white", fg_color="black", width=20, command=lambda: main(labels))
+    startAttackButton.grid(column = 0, row = 0, pady = 15, padx = 10, columnspan = 2)
+    
+    #Creates a label called "elapsedTime" and places it on the grid. Will be updated with the current elapsed time.
+    elapsedTimeLabel = ctk.CTkLabel(frame, text="00:00", font=("Arial", 24), text_color="white")
+    elapsedTimeLabel.grid(column = 0, row = 1, pady = 3, padx = 3, columnspan = 2)
+
+    #Creates a label called "attemptNumber" and places it on the grid. Will be updated with the current attempt number.
+    attemptNumberLabel = ctk.CTkLabel(frame, text="--", font=("Arial", 24), text_color="white")
+    attemptNumberLabel.grid(column = 0, row = 2, pady = 3, padx = 3, sticky="e")
+
+    #Creates a label called "passwordAttempt" and places it on the grid. Will be updated with the current password attempt.
+    passwordAttemptLabel = ctk.CTkLabel(frame, text="--", font=("Arial", 24), text_color="white")
+    passwordAttemptLabel.grid(column = 1, row = 2, pady = 3, padx = 3)
+
+    #Creates a label called "passwordDetected" and places it on the grid. Will be updated to say if the password was found or not.
+    passwordDetectedLabel = ctk.CTkLabel(frame, text="Click \"Start Attack\"", font=("Arial", 24), text_color="white")
+    passwordDetectedLabel.grid(column = 0, row = 3, pady = 15, padx = 3, columnspan = 2)
+
+    labels = [elapsedTimeLabel, attemptNumberLabel, passwordAttemptLabel, passwordDetectedLabel] #Array of all the labels to pass to main to update them as the program runs
+
+    root.mainloop() #Runs the user interface
+
+
+def main(labels) -> None:
     start_time = time.time() # Start program run timer
     print("\nStarting Brute Force Attack...\n")
 
     password_list_array = read_passwords_from_file(COMMON_PASSWORD_LIST)
     target_word = get_target(TARGET_PASSWORD)
+    
+    #Assigns the corresponding labels from the labels array
+    elapsedTimeLabel = labels[0]
+    attemptNumberLabel = labels[1]
+    passwordAttemptLabel = labels[2]
+    passwordDetectedLabel = labels[3]
 
     if not target_word:
         print("\nFailed: No valid target password in password secret password file.")
+        passwordDetectedLabel.configure(text="No valid password in file") #Updates passwordDetectedLabel
         return
     
     # Loop through t
@@ -69,20 +109,27 @@ def main() -> None:
         attempt = 0
         for word in password_list_array:
             attempt += 1
-            print(f"{attempt}. Trying: \"{word}\"")
+            print(f"{attempt}. Trying: \"{word}\"")            
+            attemptNumberLabel.configure(text=attempt) #Updates attemptNumberLabel
+            passwordAttemptLabel.configure(text=word) #Updates passwordAttemptLabel
             
             if word == target_word:
                 print(f"\nSuccess, the password word was: \"{word}\"")
+                passwordDetectedLabel.configure(text="Password found!") #updates passwordDetectedLabel
                 break
         else:
             print("\nFailed: The Common Password List doesn't contain the user's password.")
+            passwordDetectedLabel.configure(text="Password was not found") #updates passwordDetectedLabel
     
     else:
         print("\nFailed: The common password list is empty.")
+        passwordDetectedLabel.configure(text="Password list was empty") #updates passwordDetectedLabel
     
     end_time = time.time()
-    print(f"\nFinished in {end_time - start_time:.2f} seconds.\n")
-
+    elapsed_time = round(end_time - start_time, 2)
+    print(f"\nFinished in {elapsed_time} seconds.\n")
+    elapsedTimeLabel.configure(text=f"{elapsed_time} s") #updates elapsedTimeLabel
 
 if __name__ == "__main__":
-    main()
+    #main()
+    user_Interface() #Temporarily until we move things around to the UI instead of being in the terminal
