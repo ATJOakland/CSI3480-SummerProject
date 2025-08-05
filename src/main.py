@@ -17,8 +17,8 @@ import time
 import customtkinter as ctk
 
 # Constants
-COMMON_PASSWORD_LIST = "./secret_user_info/secret_password.txt" #Changed from rockyou file path to secret_password path
-TARGET_PASSWORD = "./secret_user_info/secret_password.txt"
+COMMON_PASSWORD_LIST = "../small-password-list/smallpasswordlist.txt" #Changed from rockyou file path to secret_password path
+TARGET_PASSWORD = "../secret_user_info/secret_password.txt"
 
 def read_passwords_from_file(filename: str) -> list[str]:
     # Read all the words in the text file and adds it to the array for testing.
@@ -55,9 +55,10 @@ def get_target(filename: str) -> str:
         return ""    
 
 def user_Interface():
-    root = ctk.CTk() #Initializes the User Interface window
-    root.title("Brute Force Attack") #Sets title of window
-    root.geometry("400x400") #Sets size of the window
+    root = ctk.CTk() # Initializes the User Interface window
+    ctk.set_appearance_mode("dark")
+    root.title("Brute Force Attack")
+    root.geometry("1280x720")
     frame = ctk.CTkFrame(master=root, width=500, height=500) #Sets a frame in the window to utalize a grid for label & button placement
     frame.place(relx=.5, rely=.5, anchor="center", bordermode = 'outside') #places the frame in the center of the window
 
@@ -110,8 +111,8 @@ def main(labels) -> None:
         for word in password_list_array:
             attempt += 1
             print(f"{attempt}. Trying: \"{word}\"")            
-            attemptNumberLabel.configure(text=attempt) #Updates attemptNumberLabel
-            passwordAttemptLabel.configure(text=word) #Updates passwordAttemptLabel
+            attemptNumberLabel.configure(text=f"Attempt: #{attempt} | ") #Updates attemptNumberLabel
+            passwordAttemptLabel.configure(text=f"Password: {word}") #Updates passwordAttemptLabel
             
             if word == target_word:
                 print(f"\nSuccess, the password word was: \"{word}\"")
