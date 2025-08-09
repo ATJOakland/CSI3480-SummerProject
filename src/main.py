@@ -14,7 +14,9 @@ But it's a big file (100MB) and GitHub only allows 25MB upload so a lot had to b
 """
 
 import time
+import random
 import customtkinter as ctk
+from tkinter import simpledialog, messagebox
 
 # Constants
 COMMON_PASSWORD_LIST = "../small-password-list/smallpasswordlist.txt" #Changed from rockyou file path to secret_password path
@@ -52,7 +54,40 @@ def get_target(filename: str) -> str:
         return ""
     except Exception as e:
         print(f"An error occured: {e}")
-        return ""    
+        return ""
+
+def perform_2fa(root_window) -> bool:
+    """
+    Performs 2FA by generating a random 4-digit number and asking user to input it.
+    Returns True if user enters correct number, False if they cancel or enter wrong number.
+    """
+
+    # Generate random 4-digit number
+    random_number = random.randint(1000, 9999)
+
+    # Ask user to input the number
+    user_input = simpledialog.askstring(
+        "2FA Verification", 
+        f"Please type {random_number}:", 
+        parent=root_window
+    )
+
+    # Check if user cancelled or entered wrong number
+    if user_input is None:  # User cancelled
+        return False
+
+    try:
+        if int(user_input) == random_number:
+            return True
+
+        else:
+            messagebox.showerror("2FA Failed", "Incorrect number entered!", parent=root_window)
+            return False
+
+    except ValueError:
+        messagebox.showerror("2FA Failed", "Please enter a valid number!", parent=root_window)
+        return False
+
 
 def user_Interface():
     root = ctk.CTk() # Initializes the User Interface window
@@ -62,13 +97,13 @@ def user_Interface():
     frame = ctk.CTkFrame(master=root, width=500, height=500) #Sets a frame in the window to utalize a grid for label & button placement
     frame.place(relx=.5, rely=.5, anchor="center", bordermode = 'outside') #places the frame in the center of the window
 
-    #Creates a button called "Start Attack" and places it on the grid in the first row/column
-    startAttackButton = ctk.CTkButton(frame, text="Start Attack", font=("Arial", 24), text_color="white", fg_color="black", width=20, command=lambda: main(labels))
-    startAttackButton.grid(column = 0, row = 0, pady = 15, padx = 10, columnspan = 2)
-    
-    #Creates a label called "elapsedTime" and places it on the grid. Will be updated with the current elapsed time.
-    elapsedTimeLabel = ctk.CTkLabel(frame, text="00:00", font=("Arial", 24), text_color="white")
-    elapsedTimeLabel.grid(column = 0, row = 1, pady = 3, padx = 3, columnspan = 2)
+    #Creates a checkbox for 2FA option
+    twoFACheckbox = ctk.CTkCheckBox(frame, text="Enable 2FA", font=("Arial", 16), text_color="white")
+    twoFACheckbox.grid(column = 0, row = 0, pady = 5, padx = 10, columnspan = 2)
+
+    #Creates a button called "Start Attack" and places it on the grid
+    startAttackButton = ctk.CTkButton(frame, text="Start Attack", font=("Arial", 24), text_color="white", fg_color="black", width=20, command=lambda: main(labels, twoFACheckbox, root))
+    startAttackButton.grid(column = 0, row = 1, pady = 15, padx = 10, columnspan = 2)
 
     #Creates a label called "attemptNumber" and places it on the grid. Will be updated with the current attempt number.
     attemptNumberLabel = ctk.CTkLabel(frame, text="--", font=("Arial", 24), text_color="white")
@@ -76,18 +111,22 @@ def user_Interface():
 
     #Creates a label called "passwordAttempt" and places it on the grid. Will be updated with the current password attempt.
     passwordAttemptLabel = ctk.CTkLabel(frame, text="--", font=("Arial", 24), text_color="white")
-    passwordAttemptLabel.grid(column = 1, row = 2, pady = 3, padx = 3)
+    passwordAttemptLabel.grid(column = 1, row = 3, pady = 3, padx = 3)
+    
+    #Creates a label called "elapsedTime" and places it on the grid. Will be updated with the current elapsed time.
+    elapsedTimeLabel = ctk.CTkLabel(frame, text="00:00", font=("Arial", 24), text_color="white")
+    elapsedTimeLabel.grid(column = 0, row = 4, pady = 3, padx = 3, columnspan = 2)
 
     #Creates a label called "passwordDetected" and places it on the grid. Will be updated to say if the password was found or not.
     passwordDetectedLabel = ctk.CTkLabel(frame, text="Click \"Start Attack\"", font=("Arial", 24), text_color="white")
-    passwordDetectedLabel.grid(column = 0, row = 3, pady = 15, padx = 3, columnspan = 2)
+    passwordDetectedLabel.grid(column = 0, row = 5, pady = 15, padx = 3, columnspan = 2)
 
     labels = [elapsedTimeLabel, attemptNumberLabel, passwordAttemptLabel, passwordDetectedLabel] #Array of all the labels to pass to main to update them as the program runs
 
     root.mainloop() #Runs the user interface
 
 
-def main(labels) -> None:
+def main(labels, twofa_checkbox, root_window) -> None:
     start_time = time.time() # Start program run timer
     print("\nStarting Brute Force Attack...\n")
 
@@ -105,7 +144,7 @@ def main(labels) -> None:
         passwordDetectedLabel.configure(text="No valid password in file") #Updates passwordDetectedLabel
         return
     
-    # Loop through t
+    # Loop through passwords
     if len(password_list_array) > 0:
         attempt = 0
         for word in password_list_array:
@@ -114,6 +153,17 @@ def main(labels) -> None:
             attemptNumberLabel.configure(text=f"Attempt: #{attempt} | ") #Updates attemptNumberLabel
             passwordAttemptLabel.configure(text=f"Password: {word}") #Updates passwordAttemptLabel
             
+            root_window.update()  # Refresh UI to show current attempt
+
+            # Check if 2FA is enabled
+            if twofa_checkbox.get():
+                print("2FA enabled - requesting verification...")
+
+                if not perform_2fa(root_window):
+                    print("2FA verification failed or cancelled. Stopping attack.")
+                    passwordDetectedLabel.configure(text="Attack cancelled (2FA failed)")
+                    return
+
             if word == target_word:
                 print(f"\nSuccess, the password word was: \"{word}\"")
                 passwordDetectedLabel.configure(text="Password found!") #updates passwordDetectedLabel
