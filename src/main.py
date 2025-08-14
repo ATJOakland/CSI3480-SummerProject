@@ -132,7 +132,7 @@ def read_passwords_from_file(filename: str) -> list[str]:
 
 def get_password(user):
     # Returns the password of the specified user called. Each password increases in complexity.
-    user_passwords = {"user1":"password", "user2":"password123", "user3":"password123456" }
+    user_passwords = {"user1":"123", "user2":"sight", "user3":"horizon372" }
     return user_passwords.get(user, None) # Returns None if username isnt found
 
 def get_password_selection_options() -> dict:
@@ -362,7 +362,7 @@ def login_page(root, frame):
     login_button.grid(column = 0, row = 6, pady = 20, padx = 10, columnspan = 2)
 
     # Password hints
-    hints_label = ctk.CTkLabel(login_frame, text="Hints: user1=password, user2=password123, user3=password123456", font=("Arial", 12), text_color="yellow")
+    hints_label = ctk.CTkLabel(login_frame, text="Hints: user1=123 (easy), user2=sight (medium), user3=horizon372 (hard)", font=("Arial", 12), text_color="yellow")
     hints_label.grid(column = 0, row = 7, pady = 10, padx = 10, columnspan = 2)
 
 def hide_login_page(frame, login_frame):
